@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ## Elucidating Explicit&Easy Shortcut Model
 Official code base of <On the Design of One-step Diffusion via Shortcutting Flow Paths>
 
