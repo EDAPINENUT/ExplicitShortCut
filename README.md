@@ -175,7 +175,3 @@ torchrun --nnodes=1 evaluate.py \
     --fid-statistics-file "./fid_stats/adm_float32_in256_stats.npz" \
     --adapt-model
 ```
-=======
-# ExplicitShortCut
-Official code base of &lt;On the Design of One-step Diffusion via Shortcutting Flow Paths>
->>>>>>> 1b17a545bc9e4293557e20526a2539366b7206df
