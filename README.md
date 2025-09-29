@@ -1,5 +1,5 @@
 ## Elucidating Explicit&Easy Shortcut Model
-Official code base of <On the Design of One-step Diffusion via Shortcutting Flow Paths>
+Official code base of "On the Design of One-step Diffusion via Shortcutting Flow Paths"
 
 ### DATA PREPARATION
 This implementation utilizes LMDB datasets with VAE-encoded latent representations for efficient training. The preprocessing pipeline is reimplementation from the [MAR](https://github.com/LTH14/mar/blob/main/main_cache.py). 
