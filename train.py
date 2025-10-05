@@ -152,7 +152,7 @@ def main(args):
     }
 
     if args.variational_adaptive_weight:
-        from arch.sit_adot import SiT_models
+        from arch.sit_adpt import SiT_models
     else:
         from arch.sit import SiT_models
 

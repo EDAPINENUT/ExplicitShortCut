@@ -151,6 +151,7 @@ class SiT(nn.Module):
         use_cfg=False,
         z_dims=[768],
         projector_dim=2048,
+        r_cond_weights=False,
         **block_kwargs # fused_attn
     ):
         super().__init__()
@@ -162,6 +163,7 @@ class SiT(nn.Module):
         self.use_cfg = use_cfg
         self.num_classes = num_classes
         self.z_dims = z_dims
+        self.r_cond_weights = r_cond_weights
 
         self.x_embedder = PatchEmbed(
             input_size, patch_size, in_channels, hidden_size, bias=True
@@ -262,7 +264,10 @@ class SiT(nn.Module):
             x = block(x, c)  # (N, T, D)
         x = self.final_layer(x, c)  # (N, T, patch_size ** 2 * out_channels)
         x = self.unpatchify(x)  # (N, out_channels, H, W)
-        log_var = self.logvar_linear(t_embed + r_embed)
+        if self.r_cond_weights:
+            log_var = self.logvar_linear(t_embed + r_embed)
+        else:
+            log_var = self.logvar_linear(t_embed)
         if return_logvar:
             return x, log_var
         else:

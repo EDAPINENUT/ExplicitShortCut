@@ -42,7 +42,6 @@ log.txt
 
 # Data and datasets
 data/
-datasets/
 *.h5
 *.hdf5
 
@@ -84,3 +83,6 @@ cache/
 *.temp
 temp/
 tmp/
+
+#
+MeanFlow-Latent/

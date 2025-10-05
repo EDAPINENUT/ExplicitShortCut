@@ -38,7 +38,7 @@ accelerate launch --multi_gpu \
     --cfg-min-t 0.0 \
     --cfg-max-t 1.0 \
     --variational-adaptive-weight \
-    --grad-warmup-steps \
+    --grad-warmup-steps 10000 \
     --use-vplug \
     --vplug-prob 0.5 \
     --term-zero-steps 20000 \
