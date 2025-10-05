@@ -16,7 +16,7 @@ def parse_args(input_args=None):
     parser.add_argument("--num-classes", type=int, default=1000)
 
     # dataset
-    parser.add_argument("--data-dir", type=str, default="/wutailin/image_data/imagenet_vq_lmdb/train")
+    parser.add_argument("--data-dir", type=str, default="./imagenet_vq_lmdb/train")
     parser.add_argument("--resolution", type=int, choices=[256, 512], default=256)
     parser.add_argument("--batch-size", type=int, default=32)
 
