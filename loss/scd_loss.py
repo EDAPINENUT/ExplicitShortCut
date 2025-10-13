@@ -1,10 +1,17 @@
+'''
+Adapted from the JAX implementation of SCD (https://github.com/kvfrans/shortcut-models)
+'''
 import torch
 import numpy as np
-from torch.func import jvp
-from scheduler import LinearFlowScheduler
-import pdb
+from utils.scheduler import LinearFlowScheduler
 
 class SCDLoss:
+    """ShortCut  Diffusion (SCD) loss.
+
+    Provides a two-branch training objective: a bootstrap (consistency) path
+    with multi-hop guidance and a flow-matching path. Supports classifier-free
+    guidance (CFG) via label dropout and mixing at specific hops.
+    """
     def __init__(
         self,
         path_type="linear",
@@ -17,6 +24,19 @@ class SCDLoss:
         # CFG related params
         cfg_omega=1.0,                # CFG omega param, default 1.0 means no CFG
     ):
+        """Initialize SCD loss configuration.
+
+        Args:
+            path_type (str): Interpolation path type; currently supports "linear".
+            loss_type (str): Loss type; "l2" for MSE or "adaptive" for weighted loss.
+            ratio_r_not_equal_t (float): Fraction of batch for bootstrap branch
+                (consistency path). Remaining goes to flow-matching branch.
+            total_step (int): Total discrete steps used to schedule times.
+            adaptive_p (float): Power for adaptive weighting when `loss_type` is "adaptive".
+            label_dropout_prob (float): Probability to drop labels for CFG (set to
+                the extra class index `num_classes`).
+            cfg_omega (float): CFG scale for mixing conditional and unconditional velocities.
+        """
         self.loss_type = loss_type
         self.path_type = path_type
         
@@ -35,7 +55,15 @@ class SCDLoss:
             raise ValueError(f"Unknown path type: {path_type}")
         
     def interpolant(self, t):
-        """Define interpolation function"""
+        """Compute interpolation scalars and their derivatives at time `t`.
+
+        Args:
+            t (torch.Tensor): Time tensor broadcastable to `(B, 1, 1, 1)` in `[0,1]`.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+                `alpha_t`, `sigma_t`, `d_alpha_t`, `d_sigma_t`.
+        """
         alpha_t = self.flow_scheduler.alpha(t)
         sigma_t = self.flow_scheduler.sigma(t)
         d_alpha_t = self.flow_scheduler.d_alpha(t)
@@ -44,6 +72,20 @@ class SCDLoss:
         return alpha_t, sigma_t, d_alpha_t, d_sigma_t
     
     def sample_time_steps(self, batch_size, device):
+        """Sample `(r, s, t)` for bootstrap and flow-matching branches.
+
+        The first `ratio_r_not_equal_t` fraction of the batch forms the bootstrap
+        branch with multi-hop times; the rest forms the flow-matching branch where
+        `s == r` and `t` is one step ahead.
+
+        Args:
+            batch_size (int): Batch size.
+            device (torch.device): Target device for returned tensors.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: `r`, `s`, `t` each of
+            shape `(B,)` in `[0,1]`.
+        """
         # 1) ========= consistency bootstrap time =======
         bootstrap_batchsize = int(batch_size * self.ratio_r_not_equal_t)
         log2_sections = int(np.log2(self.total_step)) # 7
@@ -72,7 +114,7 @@ class SCDLoss:
         # 2) ======== flow matching time #######
         fm_t_steps = torch.randint(1, max_steps + 1, size=(batch_size-bootstrap_batchsize,), device=device)
         fm_t = fm_t_steps.float() / self.total_step
-        fm_r_steps = fm_t_steps - 1 ##fm_t-1 即最小步长
+        fm_r_steps = fm_t_steps - 1 
         fm_r = fm_r_steps.float() / self.total_step
         fm_s = fm_r
         
@@ -83,6 +125,23 @@ class SCDLoss:
         return r, s, t
     
     def _tgt_u(self, model_tgt, z_t, v_t, r, s, t, **model_kwargs):
+        """Compute target velocity `u_target` for SCD.
+
+        Bootstrap branch computes two guided hops (`t->s` and `s->r`) with CFG
+        mixing. Flow-matching branch uses the instantaneous velocity `v_t`.
+
+        Args:
+            model_tgt (Callable): Target/EMA model to query velocities.
+            z_t (torch.Tensor): Interpolated states, `(B, C, H, W)`.
+            v_t (torch.Tensor): Instantaneous interpolant velocity, `(B, C, H, W)`.
+            r (torch.Tensor): Start times `(B,)`.
+            s (torch.Tensor): Mid times `(B,)`.
+            t (torch.Tensor): End times `(B,)`.
+            **model_kwargs: Optional kwargs passed to `model_tgt` (e.g., `y`).
+
+        Returns:
+            torch.Tensor: Target velocity `(B, C, H, W)` combining branches.
+        """
         if model_kwargs == None:
             model_kwargs = {}
         else:
@@ -147,9 +206,17 @@ class SCDLoss:
         return u_target
                 
     def __call__(self, model, model_tgt, images, model_kwargs=None):
+        """Compute SCD loss for a batch.
+
+        Args:
+            model (Callable): Student model `u(z_t, r, t, **kwargs)`.
+            model_tgt (Callable): Target/EMA model with same signature as `model`.
+            images (torch.Tensor): Input images `(B, C, H, W)`.
+            model_kwargs (Optional[dict]): Optional kwargs passed to models (e.g., `y`).
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]: Per-sample loss `(B,)` and mean reference.
         """
-        Compute Shortcut loss function
-        """        
         batch_size = images.shape[0]
         device = images.device
             
@@ -168,8 +235,14 @@ class SCDLoss:
         return loss, loss_mean_ref
     
     def loss_u(self, u_pred, u_target):
-        """
-        Compute loss for velocity u
+        """Compute velocity loss between prediction and target.
+
+        Args:
+            u_pred (torch.Tensor): Predicted velocity `(B, C, H, W)`.
+            u_target (torch.Tensor): Target velocity `(B, C, H, W)`.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]: Per-sample loss `(B,)` and mean reference.
         """
         # Detach the target to prevent gradient flow        
         error = u_pred - u_target.detach()

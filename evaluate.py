@@ -10,7 +10,7 @@ import torch
 import torch.distributed as dist
 from diffusers.models import AutoencoderKL
 import torch_fidelity
-from sit_adpt import SiT_models
+from arch.sit_adpt import SiT_models
 
 from scheduler import CosineFlowScheduler, LinearFlowScheduler
 
@@ -42,10 +42,10 @@ def main(args):
     latent_size = args.resolution // 8
     if args.adapt_model:
         print("Using adapt model")
-        from sit_adpt import SiT_models as SiT_models_ckpt
+        from arch.sit_adpt import SiT_models as SiT_models_ckpt
     else:
         print("Using original model")
-        from sit import SiT_models as SiT_models_ckpt
+        from arch.sit import SiT_models as SiT_models_ckpt
     model = SiT_models_ckpt[args.model](
         input_size=latent_size,
         num_classes=args.num_classes,
@@ -55,6 +55,7 @@ def main(args):
     
     # Load checkpoint
     state_dict = torch.load(args.ckpt, map_location=f'cuda:{device}', weights_only=False)['ema']
+    print('Loading checkpoint from {}...'.format(args.ckpt))
     model.load_state_dict(state_dict)
     model.eval()
     
@@ -188,13 +189,13 @@ if __name__ == "__main__":
     # seed
     parser.add_argument("--global-seed", type=int, default=0)
     # logging/saving:
-    parser.add_argument("--ckpt", type=str, default="/internfs/linhaitao/esc/esc-imagenet-main/exp/meanflow-b2-reproduct/checkpoints/0600000.pt", 
+    parser.add_argument("--ckpt", type=str, default="/hupeiyan/linhaitao/MeanFlow-Latent/exp/meanflow-xl2-scm-ev-labelcluster/checkpoints/1200000.pt", 
                         help="Path to a checkpoint.")
-    parser.add_argument("--sample-dir", type=str, default="./samples/meanflow-b2-reproduct-vis/")
+    parser.add_argument("--sample-dir", type=str, default="./samples/meanflow-xl2-scm-ev-labelcluster/")
     parser.add_argument("--keep-img", default=False, action=argparse.BooleanOptionalAction)
 
     # model
-    parser.add_argument("--model", type=str, choices=list(SiT_models.keys()), default="SiT-B/2")
+    parser.add_argument("--model", type=str, choices=list(SiT_models.keys()), default="SiT-XL/2")
     parser.add_argument("--adapt-model", type=bool, action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--num-classes", type=int, default=1000)
     parser.add_argument("--encoder-depth", type=int, default=8)

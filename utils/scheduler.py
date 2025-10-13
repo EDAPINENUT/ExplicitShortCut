@@ -166,8 +166,9 @@ class CosineFlowSchedulerLegacy(FlowScheduler):
 
     
 class LinearFlowScheduler(FlowScheduler):
-    def __init__(self, ):
+    def __init__(self, sigma_data=1.0):
         super().__init__()
+        self.sigma_data = sigma_data
 
     def alpha(self, t):
         return 1 - t
@@ -194,16 +195,20 @@ class LinearFlowScheduler(FlowScheduler):
         return (t_start - t_end) / t_start
     
     def c_in(self, t):
-        return torch.ones_like(t)
+        return torch.ones_like(t) * 1 / self.sigma_data
     
     def c_out(self, t):
-        return torch.ones_like(t)
+        return torch.ones_like(t) * self.sigma_data
     
     def d_alpha_bar_dt(self, t_start, t_end):
         return torch.zeros_like(t_start)
     
     def d_beta_bar_dt(self, t_start, t_end):
         return - torch.ones_like(t_start)
+    
+    @property
+    def sigma_0(self,):
+        return self.sigma_data
     
     
 

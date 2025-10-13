@@ -1,9 +1,19 @@
+
+'''
+adapted from https://github.com/zhuyu-cs/MeanFlow/blob/main/loss.py
+'''
+
 import torch
-import numpy as np
 from torch.func import jvp
 from utils.scheduler import LinearFlowScheduler
 
 class MeanFlowLoss:
+    """MeanFlow training loss with optional classifier-free guidance (CFG).
+
+    This class computes the target velocity and loss for MeanFlow-based models.
+    It supports configurable time sampling strategies, adaptive loss weighting,
+    label dropout for classifier-free guidance, and CFG mixing controls.
+    """
     def __init__(
         self,
         path_type="linear",
@@ -21,6 +31,26 @@ class MeanFlowLoss:
         cfg_min_t=0.0,                # Minium CFG trigger time 
         cfg_max_t=0.8,                # Maximum CFG trigger time
     ):
+        """Initialize MeanFlow loss configuration.
+
+        Args:
+            path_type (str): Interpolation path type. Currently supports "linear".
+            loss_type (str): Loss type. "l2" for mean squared error, or "adaptive" for
+                adaptive weighting based on per-sample error magnitude.
+            time_sampler (str): Time sampling strategy: "uniform" or "logit_normal".
+            time_mu (float): Mean parameter for the logit-normal time sampler.
+            time_sigma (float): Std parameter for the logit-normal time sampler.
+            ratio_r_not_equal_t (float): Fraction in (0,1] specifying the probability
+                that sampled times satisfy r < t; remaining fraction sets r = t.
+            adaptive_p (float): Power for adaptive loss weighting when `loss_type` is
+                "adaptive".
+            label_dropout_prob (float): Probability to drop labels (set to class `num_classes`)
+                to create unconditional samples for CFG.
+            cfg_omega (float): CFG mixing weight for the instantaneous velocity term.
+            cfg_kappa (float): CFG mixing weight for the conditional target velocity.
+            cfg_min_t (float): Minimum time to enable CFG mixing.
+            cfg_max_t (float): Maximum time to enable CFG mixing.
+        """
         self.loss_type = loss_type
         self.path_type = path_type
         
@@ -43,7 +73,16 @@ class MeanFlowLoss:
         
 
     def interpolant(self, t):
-        """Define interpolation function"""
+        """Compute interpolation scalars and their derivatives at time `t`.
+
+        Args:
+            t (torch.Tensor): Time tensor of shape `(B, 1, 1, 1)` or broadcastable
+                to that shape with values in `[0, 1]`.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+                `alpha_t`, `sigma_t`, `d_alpha_t`, `d_sigma_t`, all shaped like `t`.
+        """
         alpha_t = self.flow_scheduler.alpha(t)
         sigma_t = self.flow_scheduler.sigma(t)
         d_alpha_t = self.flow_scheduler.d_alpha(t)
@@ -52,7 +91,16 @@ class MeanFlowLoss:
         return alpha_t, sigma_t, d_alpha_t, d_sigma_t
     
     def sample_time_steps(self, batch_size, device):
-        """Sample time steps (r, t) according to the configured sampler"""
+        """Sample a pair of times `(r, t)` with `t >= r`, and set `s = t`.
+
+        Args:
+            batch_size (int): Number of samples to draw.
+            device (torch.device): Target device for returned tensors.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+                `r`, `s`, `t` in `[0, 1]`, each shaped `(B,)`, where `s == t`.
+        """
         # Step1: Sample two time points
         if self.time_sampler == "uniform":
             time_samples = torch.rand(batch_size, 2, device=device)
@@ -78,8 +126,18 @@ class MeanFlowLoss:
         return r, s, t 
     
     def __call__(self, model, model_tgt, images, kwargs=None):
-        """
-        Compute MeanFlow loss function with bootstrap mechanism
+        """Compute MeanFlow loss for a batch.
+
+        Args:
+            model (Callable): Student model `u(z_t, r, t, **kwargs)` producing velocity.
+            model_tgt (Callable): Target/EMA model with the same signature as `model`.
+            images (torch.Tensor): Input images `x` of shape `(B, C, H, W)`.
+            kwargs (Optional[dict]): Optional model kwargs. If contains key `y`
+                (class labels), label dropout may be applied for CFG.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]:
+                `loss` of shape `(B,)` (per-sample) and `loss_mean_ref` scalar reference.
         """
         if kwargs == None:
             kwargs = {}
@@ -121,10 +179,17 @@ class MeanFlowLoss:
         return loss, loss_mean_ref
 
     def loss_u(self, u_pred, u_target):
+        """Compute velocity loss between prediction and target.
+
+        Args:
+            u_pred (torch.Tensor): Predicted velocity, shape `(B, C, H, W)`.
+            u_target (torch.Tensor): Target velocity, shape `(B, C, H, W)`.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]:
+                Per-sample loss `(B,)` and mean squared error scalar as reference.
         """
-        Compute loss for velocity u
-        """
-                # Detach the target to prevent gradient flow        
+        # Detach the target to prevent gradient flow        
         error = u_pred - u_target.detach()
         # Apply adaptive loss based on configuration
         if self.loss_type == "adaptive":
@@ -140,8 +205,25 @@ class MeanFlowLoss:
         return loss, loss_mean_ref
 
     def _tgt_u(self, model_tgt, z_t, v_t, r, s, t, unconditional_mask, **model_kwargs):
-        """
-        Compute target velocity u_target for CFG samples
+        """Compute target velocity `u_target` using JVP and optional CFG.
+
+        In MeanFlow, by construction `s = t`. For samples within the CFG time
+        window and with labels present (and not dropped), a mixed velocity is
+        used to compute the JVP; otherwise the standard JVP is used.
+
+        Args:
+            model_tgt (Callable): Target/EMA model `u(z_t, r, t, **kwargs)`.
+            z_t (torch.Tensor): Interpolated state, shape `(B, C, H, W)`.
+            v_t (torch.Tensor): Instantaneous velocity d/dt of the interpolant, `(B, C, H, W)`.
+            r (torch.Tensor): Start times, shape `(B,)`.
+            s (torch.Tensor): End times, equals `t`, shape `(B,)`.
+            t (torch.Tensor): Current times, shape `(B,)`.
+            unconditional_mask (torch.Tensor): Boolean mask `(B,)` of samples with
+                label dropped (unconditional) for CFG.
+            **model_kwargs: Optional keyword args forwarded to `model_tgt` (e.g., `y`).
+
+        Returns:
+            torch.Tensor: Target velocity `u_target` of shape `(B, C, H, W)`.
         """
         batch_size = z_t.shape[0]
         time_diff = (t - r).view(-1, 1, 1, 1)      

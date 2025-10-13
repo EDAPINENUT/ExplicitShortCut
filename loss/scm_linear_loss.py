@@ -1,9 +1,9 @@
 import torch
 import numpy as np
 from torch.func import jvp
-from scheduler import LinearFlowScheduler
+from utils.scheduler import LinearFlowScheduler
 
-class MeanFlowLossESC:
+class SCMLinearLoss:
     def __init__(
         self,
         path_type="linear",
@@ -21,6 +21,7 @@ class MeanFlowLossESC:
         cfg_min_t=0.0,                # Minium CFG trigger time 
         cfg_max_t=0.8,                # Maximum CFG trigger time
         grad_warmup_steps=10000,
+        variational_adaptive_weight=True,
     ):
         self.loss_type = loss_type
         self.path_type = path_type
@@ -40,6 +41,7 @@ class MeanFlowLossESC:
         self.cfg_min_t = cfg_min_t
         self.cfg_max_t = cfg_max_t
         self.grad_warmup_steps = grad_warmup_steps
+        self.variational_adaptive_weight = variational_adaptive_weight
         if path_type == "linear":
             self.flow_scheduler = LinearFlowScheduler()
         
@@ -73,6 +75,7 @@ class MeanFlowLossESC:
         fraction_equal = 1.0 - self.ratio_r_not_equal_t  # e.g., 0.75 means 75% of samples have r=t
         # Create a mask for samples where r should equal t
         equal_mask = torch.rand(batch_size, device=device) < fraction_equal
+        r = torch.zeros_like(r) # set r to 0
         # Apply the mask: where equal_mask is True, set r=t (replace)
         r = torch.where(equal_mask, t, r)
         s = t
@@ -114,8 +117,11 @@ class MeanFlowLossESC:
         
         # Calculate instantaneous velocity v_t 
         v_t = d_alpha_t * images + d_sigma_t * noises
-        
-        u, log_var = model(z_t, r, t, model_kwargs['y'], return_logvar=True)
+        if self.variational_adaptive_weight:
+            u, log_var = model(z_t, r, t, model_kwargs['y'], return_logvar=True)
+        else:
+            u = model(z_t, r, t, model_kwargs['y'])
+            log_var = torch.zeros(batch_size, device=device)
         
         u_target = self._tgt_u(model_tgt, z_t, v_t, r, s, t, unconditional_mask, **model_kwargs)
                 
@@ -127,7 +133,7 @@ class MeanFlowLossESC:
         """
         Compute loss for velocity u
         """
-                # Detach the target to prevent gradient flow        
+        # Detach the target to prevent gradient flow        
         error = u_pred - u_target.detach()
         # Apply adaptive loss based on configuration
         if self.loss_type == "adaptive":
