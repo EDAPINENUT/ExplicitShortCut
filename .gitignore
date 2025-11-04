@@ -1,0 +1,92 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyTorch
+*.pth
+*.pt
+
+# Checkpoints and model files
+ckpt/
+checkpoints/
+*.bin
+*.safetensors
+
+# Logs and experiments
+logs/
+exps/
+exp/
+experiments/
+runs/
+wandb/
+*.log
+log.txt
+
+# Data and datasets
+data/
+*.h5
+*.hdf5
+
+# Large files in fid_stats except the specified ones
+fid_stats/*
+!fid_stats/adm_float32_in256_stats.npz
+!fid_stats/adm_in256_stats.npz
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Cache directories
+.cache/
+cache/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+#
+MeanFlow-Latent/
+train_imm.py
+run_continuously.sh
+run_imm_b2_cond_resume.sh
