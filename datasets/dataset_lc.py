@@ -7,80 +7,130 @@ import torch
 from tqdm import tqdm
 from torch.utils.data import Sampler
 
-class LMDBLatentsDataset(torch.utils.data.Dataset):
-    """    
-    Args:
-        lmdb_path (str): LMDB dataset path.
-        flip_prob (float): flip or upflip.
+
+class LMDBLatentsDatasetRDMA(torch.utils.data.Dataset):
+    """
+    Safe for multi-process DataLoader in RDMA environments:
+    - Do not pickle lmdb.Environment across processes
+    - Re-open env per worker (lazy)
+    - Ensure returned arrays are picklable (owning memory)
     """
     def __init__(self, lmdb_path, flip_prob=0.5, class_consist=False, min_cluster_size=32):
-        self.env = lmdb.open(lmdb_path,
-                            readonly=True,
-                            lock=False,
-                            readahead=False,
-                            meminit=False)
         self.lmdb_path = lmdb_path
-        
-        with self.env.begin() as txn:
-            self.data_length = int(txn.get('num_samples'.encode()).decode())
-        self.flip_prob = flip_prob
-        self.class_consist = class_consist
-        self.min_cluster_size = min_cluster_size
-        if class_consist:
-            self.get_label_cluster()
-            self.label_cluster_active = {k: v.copy() for k, v in self.label_cluster.items()}
+        self.flip_prob = float(flip_prob)
+        self.class_consistency = bool(class_consist)
+        self.min_cluster_size = int(min_cluster_size)
 
-    def reset_label_active(self, label):
-        self.label_cluster_active[label] = self.label_cluster[label].copy()
+        # DO NOT keep an open env that will be pickled to workers.
+        self.env = None
 
+        # Read metadata (num_samples) via a short-lived read-only txn
+        # Use a temporary env; then close immediately.
+        tmp_env = lmdb.open(
+            lmdb_path, readonly=True, lock=False, readahead=False, meminit=False
+        )
+        with tmp_env.begin() as txn:
+            self.data_length = int(txn.get(b'num_samples').decode())
+        tmp_env.close()
 
-    def get_label_cluster(self):
-        label_cluster_path = os.path.join(self.lmdb_path, 'label_cluster.pt')
-        if os.path.exists(label_cluster_path):
-            self.label_cluster = torch.load(label_cluster_path)
-            self.label_length = len(self.label_cluster)
+        # label clusters (indexes per class)
+        self._label_cluster = None
+        self._label_length = None
+        if self.class_consistency:
+            self._load_or_build_label_cluster()
+            self.label_cluster_active = {k: v.copy() for k, v in self._label_cluster.items()}
+
+    # ---------- Worker-safe LMDB open ----------
+    def _ensure_env(self):
+        """ Lazily (re)open LMDB env inside each worker process. """
+        if self.env is None:
+            self.env = lmdb.open(
+                self.lmdb_path, readonly=True, lock=False, readahead=False, meminit=False
+            )
+
+    # ---------- Pickle control: don't pickle LMDB env ----------
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Do not pickle env
+        state['env'] = None
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # Worker process starts with no env; it will be opened lazily
+        self.env = None
+
+    # ---------- Label cluster ----------
+    def _load_or_build_label_cluster(self):
+        path = os.path.join(self.lmdb_path, 'label_cluster.pt')
+        if os.path.exists(path):
+            loaded = torch.load(path, map_location='cpu')
+            self._label_cluster = {int(k): list(map(int, v)) for k, v in loaded.items()}
+            self._label_length = len(self._label_cluster)
             return
-        
+
+        tmp_env = lmdb.open(
+            self.lmdb_path, readonly=True, lock=False, readahead=False, meminit=False
+        )
         label_cluster = {}
         for index in tqdm(range(self.data_length), desc='Preparing label cluster'):
-            with self.env.begin() as txn:
-                data = txn.get(f'{index}'.encode())
-                if data is None:
+            with tmp_env.begin() as txn:
+                raw = txn.get(f'{index}'.encode())
+                if raw is None:
                     raise IndexError(f'Index {index} is out of bounds')
-                
-                data = pickle.loads(data)
-                label = data['label']
-                if label not in label_cluster:
-                    label_cluster[label] = []
-                label_cluster[label].append(index)
-        self.label_cluster = label_cluster
-        self.label_length = len(label_cluster)
-        torch.save(self.label_cluster, os.path.join(self.lmdb_path, 'label_cluster.pt'))
+                data = pickle.loads(raw)
+                label = int(data['label'])
+                label_cluster.setdefault(label, []).append(index)
+        tmp_env.close()
+
+        self._label_cluster = {k: list(map(int, v)) for k, v in label_cluster.items()}
+        self._label_length = len(self._label_cluster)
+        torch.save(self._label_cluster, path)
+
+    def reset_label_active(self, label):
+        if not self._label_cluster:
+            return
+        self.label_cluster_active[label] = self._label_cluster[label].copy()
 
     def __len__(self):
-        return self.data_length 
-    
+        return self.data_length
+
     def __getitem__(self, index):
+        self._ensure_env()
+
         with self.env.begin() as txn:
-            data = txn.get(f'{index}'.encode())
-            if data is None:
+            raw = txn.get(f'{index}'.encode())
+            if raw is None:
                 raise IndexError(f'Index {index} is out of bounds')
-            
-            data = pickle.loads(data)
+
+            data = pickle.loads(raw)
             moments = data['moments']
             moments_flip = data['moments_flip']
-            label = data['label']
-            
-            use_flip = torch.rand(1).item() < self.flip_prob
-            
-            moments_to_use = moments_flip if use_flip else moments
-            
-            moments_tensor = torch.from_numpy(moments_to_use).float()
-            
-            return moments_tensor, label
-    
+            label = int(data['label'])
+
+        use_flip = bool(torch.rand(1).item() < self.flip_prob)
+        arr = moments_flip if use_flip else moments
+
+        if isinstance(arr, np.ndarray):
+            if not arr.flags['OWNDATA']:
+                arr = np.array(arr, copy=True)
+            arr = np.ascontiguousarray(arr)
+            moments_tensor = torch.from_numpy(arr).float()
+        elif torch.is_tensor(arr):
+            moments_tensor = arr.detach().clone().float()  
+        else:
+            arr = np.array(arr, copy=True)
+            arr = np.ascontiguousarray(arr)
+            moments_tensor = torch.from_numpy(arr).float()
+
+        return moments_tensor, label
+
     def __del__(self):
-        self.env.close()
+        try:
+            if self.env is not None:
+                self.env.close()
+        except Exception:
+            pass
 
 
 class SameLabelBatchSampler(Sampler):

@@ -199,10 +199,10 @@ def main(args):
     # Setup data:
     local_batch_size = int(args.batch_size // accelerator.num_processes)
     if args.class_consist:
-        from datasets.dataset_lc import SameLabelBatchSampler, LMDBLatentsDataset
-        train_dataset = LMDBLatentsDataset(args.data_dir, flip_prob=0.5, class_consist=True)
+        from datasets.dataset_lc import SameLabelBatchSampler, LMDBLatentsDatasetRDMA
+        train_dataset = LMDBLatentsDatasetRDMA(args.data_dir, flip_prob=0.5, class_consist=True)
         batch_sampler = SameLabelBatchSampler(
-            train_dataset.label_cluster, 
+            train_dataset._label_cluster, 
             batch_size=local_batch_size
         )
         train_dataloader = DataLoader(

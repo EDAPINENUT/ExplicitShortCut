@@ -1,9 +1,3 @@
-import torch
-import lmdb
-import pickle
-import numpy as np
-import os
-import torch 
 
 class LMDBLatentsDataset(torch.utils.data.Dataset):
     """    
@@ -11,7 +5,7 @@ class LMDBLatentsDataset(torch.utils.data.Dataset):
         lmdb_path (str): LMDB dataset path.
         flip_prob (float): flip or upflip.
     """
-    def __init__(self, lmdb_path, flip_prob=0.5, class_consist=False):
+    def __init__(self, lmdb_path, flip_prob=0.5, class_consist=False, min_cluster_size=32):
         self.env = lmdb.open(lmdb_path,
                             readonly=True,
                             lock=False,
@@ -22,10 +16,16 @@ class LMDBLatentsDataset(torch.utils.data.Dataset):
         with self.env.begin() as txn:
             self.data_length = int(txn.get('num_samples'.encode()).decode())
         self.flip_prob = flip_prob
-        self.class_consist = class_consist
+        self.class_consistency = class_consist
+        self.min_cluster_size = min_cluster_size
         if class_consist:
             self.get_label_cluster()
-    
+            self.label_cluster_active = {k: v.copy() for k, v in self.label_cluster.items()}
+
+    def reset_label_active(self, label):
+        self.label_cluster_active[label] = self.label_cluster[label].copy()
+
+
     def get_label_cluster(self):
         label_cluster_path = os.path.join(self.lmdb_path, 'label_cluster.pt')
         if os.path.exists(label_cluster_path):
@@ -34,7 +34,7 @@ class LMDBLatentsDataset(torch.utils.data.Dataset):
             return
         
         label_cluster = {}
-        for index in range(self.data_length):
+        for index in tqdm(range(self.data_length), desc='Preparing label cluster'):
             with self.env.begin() as txn:
                 data = txn.get(f'{index}'.encode())
                 if data is None:
@@ -50,9 +50,10 @@ class LMDBLatentsDataset(torch.utils.data.Dataset):
         torch.save(self.label_cluster, os.path.join(self.lmdb_path, 'label_cluster.pt'))
 
     def __len__(self):
-        return self.data_length
+        return self.data_length 
     
     def __getitem__(self, index):
+        
         with self.env.begin() as txn:
             data = txn.get(f'{index}'.encode())
             if data is None:
@@ -73,4 +74,3 @@ class LMDBLatentsDataset(torch.utils.data.Dataset):
     
     def __del__(self):
         self.env.close()
-
