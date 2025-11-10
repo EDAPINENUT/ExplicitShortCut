@@ -3,7 +3,7 @@ from loss.meanflow_loss import MeanFlowLoss
 from loss.scm_cos_loss import SCMCosineLoss
 from loss.scm_linear_loss import SCMLinearLoss
 from loss.scd_loss import SCDLoss
-from loss.imm_loss_new import IMMLoss
+from loss.imm_loss import IMMLoss
 
 def create_model(args):
     if args.model_name == "esc":
