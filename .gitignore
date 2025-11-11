@@ -89,4 +89,4 @@ tmp/
 MeanFlow-Latent/
 train_imm.py
 run_continuously.sh
-run_imm_b2_cond_resume.sh  
+run_imm_b2_cnd_resume.sh
