@@ -1,13 +1,34 @@
 ## Elucidating Explicit&Easy Shortcut Model
-Official code base of "On the Design of One-step Diffusion via Shortcutting Flow Paths" **(ESC: ExplicitShortCut)**
+*Official code base of "On the Design of One-step Diffusion via Shortcutting Flow Paths" **(ESC: ExplicitShortCut)***
+
+<div align="center">
+  <a href="https://https://edapinenut.github.io/" target="_blank">Haitao&nbsp;Lin</a><sup>1</sup> &ensp; <b>&middot;</b> &ensp;
+  <a href="https://peiyannn.github.io" target="_blank">Peiyan&nbsp;Hu</a><sup>1,2</sup> &ensp; <b>&middot;</b> &ensp;
+  <a href="https://openreview.net/profile?id=~Minsi_Ren1" target="_blank">Minsi&nbsp;Ren</a><sup>1</sup> &ensp; <b>&middot;</b> &ensp;
+  <a href="https://cn.linkedin.com/in/zhifeng-gao-30070088" target="_blank">Zhifeng&nbsp;Gao</a><sup>3</sup>
+  <br>
+  <a href="http://homepage.amss.ac.cn/research/homePage/8eb59241e2e74d828fb84eec0efadba5/myHomePage.html" target="_blank">Zhi-Ming&nbsp;Ma</a><sup>2</sup> &ensp; <b>&middot;</b> &ensp;
+  <a href="https://tailin.org" target="_blank">Tailin&nbsp;Wu</a><sup>1</sup>&ensp; <b>&middot;</b> &ensp;
+  <a href="https://en.westlake.edu.cn/faculty/stan-zq-li.html" target="_blank">Stan Z.&nbsp;Li</a><sup>1</sup><br>
+  <sup>1</sup> Westlake University &emsp; <sup>2</sup> Chinese Academy of Sciences &emsp; <sup>3</sup>DP Technology &emsp
+</div>
+
+---
+
+<b>Summary</b>: We propose Explicit ShortCut (ESC), a framework provides
+theoretical justification for validity of shortcut models and disentangles concrete component-level choices, thereby enabling systematic identification of improvements.
+With our proposed improvements, the resulting one-step model achieves a new state-of-the-art FID50k of 2.85 on ImageNet-256×256 under the classifier-free guidance setting with no pre-training, distillation, or curriculum learning.
 
 [![Paper](https://img.shields.io/badge/Paper-arXiv-red)](./demon/elucidating_shortcut__arxiv_.pdf)
 [![Model](https://img.shields.io/badge/🤗%20Model-ESC--XL/2-blue)](https://huggingface.co/Delcher/ESC-XL2/tree/main)
 [![Model](https://img.shields.io/badge/🤗%20Model-ESC--B/2-blue)](https://huggingface.co/Delcher/ESC-B2)
+---
 
 <p align="center">
   <img src="./demon/shortcut_demon.jpg" alt="ESC Overview" width="80%">
 </p>
+
+---
 
 ### Data Preparation
 This implementation utilizes LMDB datasets with VAE-encoded latent representations for efficient training. The preprocessing pipeline is reimplementation from the [MAR](https://github.com/LTH14/mar/blob/main/main_cache.py). 
