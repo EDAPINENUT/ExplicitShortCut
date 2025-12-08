@@ -1,11 +1,6 @@
-## Elucidating Explicit&Easy Shortcut Model
-*Official code base of "On the Design of One-step Diffusion via Shortcutting Flow Paths" **(ESC: ExplicitShortCut)***
+## On the Design of One-step Diffusion via Shortcutting Flow Paths  *(ESC: ExplicitShortCut)*
 
-<p align="center">
-  <img src="./demon/shortcut_demon.jpg" alt="ESC Overview" width="80%">
-</p>
 
----
 <div align="center">
   <a href="https://https://edapinenut.github.io/" target="_blank">Haitao&nbsp;Lin</a><sup>1</sup> &ensp; <b>&middot;</b> &ensp;
   <a href="https://peiyannn.github.io" target="_blank">Peiyan&nbsp;Hu</a><sup>1,2</sup> &ensp; <b>&middot;</b> &ensp;
@@ -19,6 +14,9 @@
 </div>
 
 ---
+<p align="center">
+  <img src="./demon/shortcut_demon.jpg" alt="ESC Overview" width="80%">
+</p>
 
 <b>Summary</b>: We propose Explicit ShortCut (ESC), a framework provides
 theoretical justification for validity of shortcut models and disentangles concrete component-level choices, thereby enabling systematic identification of improvements.
