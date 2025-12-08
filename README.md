@@ -23,7 +23,7 @@
 
 <b>Summary</b>: We propose Explicit ShortCut (ESC), a framework provides
 theoretical justification for validity of shortcut models and disentangles concrete component-level choices, thereby enabling systematic identification of improvements.
-With our proposed improvements, the resulting one-step model achieves a new state-of-the-art FID50k of 2.85 on ImageNet-256×256 under the classifier-free guidance setting with no pre-training, distillation, or curriculum learning.
+With our proposed improvements, the resulting one-step model achieves a new state-of-the-art FID50k of 2.85 on ImageNet-256×256 under the classifier-free guidance setting without pre-training, distillation, or curriculum learning.
 
 
 ---
@@ -42,146 +42,17 @@ torchrun preprocess_scripts/main_cache_imagenet.py \
 
 
 ### Training from Scratch
-Training ESC from scratch with SiT-B/2 with class-consistent mini-batching, run the following
-```bash
-accelerate launch --multi_gpu \
-    train.py \
-    --exp-name "esc-b2-cc" \
-    --output-dir "exp" \
-    --data-dir "YOUR/DESTINATION/LMDB/PATH" \
-    --model "SiT-B/2" \
-    --resolution 256 \
-    --batch-size 512 \
-    --allow-tf32 \
-    --mixed-precision "bf16" \
-    --epochs 240 \
-    --path-type "linear" \
-    --loss-type "adaptive" \
-    --time-sampler "logit_normal" \
-    --time-mu -0.4 \
-    --time-sigma 1.0 \
-    --ratio-r-not-equal-t 0.25 \
-    --adaptive-p 1.0 \
-    --cfg-omega 1.0 \
-    --cfg-kappa 0.5 \
-    --cfg-min-t 0.0 \
-    --cfg-max-t 1.0 \
-    --variational-adaptive-weight \
-    --grad-warmup-steps 0 \
-    --use-vplug \
-    --vplug-prob 0.5 \
-    --term-zero-steps 20000 \
-    --class-consist \
-    --no-debug
-```
+See [scripts](./scripts/README.md) for detailed training commands.
 
-Or without class-consistent mini-batching:
-```bash
-accelerate launch --multi_gpu \
-    train.py \
-    --exp-name "esc-b2-nocc" \
-    --output-dir "exp" \
-    --data-dir "YOUR/DESTINATION/LMDB/PATH" \
-    --model "SiT-B/2" \
-    --resolution 256 \
-    --batch-size 512 \
-    --allow-tf32 \
-    --mixed-precision "bf16" \
-    --epochs 240 \
-    --path-type "linear" \
-    --loss-type "adaptive" \
-    --time-sampler "logit_normal" \
-    --time-mu -0.4 \
-    --time-sigma 1.0 \
-    --ratio-r-not-equal-t 0.25 \
-    --adaptive-p 1.0 \
-    --cfg-omega 1.0 \
-    --cfg-kappa 0.5 \
-    --cfg-min-t 0.0 \
-    --cfg-max-t 1.0 \
-    --variational-adaptive-weight \
-    --grad-warmup-steps 0 \
-    --use-vplug \
-    --vplug-prob 0.5 \
-    --term-zero-steps 20000 \
-    --no-class-consist \
-    --no-debug
-```
-
-Training ESC from scratch with SiT-XL/2 with class-consistent mini-batching, run the following
-```bash
-accelerate launch --multi_gpu \
-    train.py \
-    --exp-name "esc-xl-cc" \
-    --output-dir "exp" \
-    --data-dir "YOUR/DESTINATION/LMDB/PATH" \
-    --model "SiT-XL/2" \
-    --resolution 256 \
-    --batch-size 256 \
-    --allow-tf32 \
-    --mixed-precision "bf16" \
-    --epochs 240 \
-    --path-type "linear" \
-    --loss-type "adaptive" \
-    --time-sampler "logit_normal" \
-    --time-mu -0.4 \
-    --time-sigma 1.0 \
-    --ratio-r-not-equal-t 0.25 \
-    --adaptive-p 1.0 \
-    --cfg-omega 0.2 \
-    --cfg-kappa 0.92 \
-    --cfg-min-t 0.0 \
-    --cfg-max-t 0.75 \
-    --variational-adaptive-weight \
-    --grad-warmup-steps 0 \
-    --use-vplug \
-    --vplug-prob 0.2 \
-    --term-zero-steps 20000 \
-    --class-consist \
-    --no-debug
-```
-
-Or without class-consistent mini-batching:
-```bash
-accelerate launch --multi_gpu \
-    train.py \
-    --exp-name "esc-xl-nocc" \
-    --output-dir "exp" \
-    --data-dir "YOUR/DESTINATION/LMDB/PATH" \
-    --model "SiT-XL/2" \
-    --resolution 256 \
-    --batch-size 256 \
-    --allow-tf32 \
-    --mixed-precision "bf16" \
-    --epochs 240 \
-    --path-type "linear" \
-    --loss-type "adaptive" \
-    --time-sampler "logit_normal" \
-    --time-mu -0.4 \
-    --time-sigma 1.0 \
-    --ratio-r-not-equal-t 0.25 \
-    --adaptive-p 1.0 \
-    --cfg-omega 0.2 \
-    --cfg-kappa 0.92 \
-    --cfg-min-t 0.0 \
-    --cfg-max-t 0.75 \
-    --variational-adaptive-weight \
-    --grad-warmup-steps 0 \
-    --use-vplug \
-    --vplug-prob 0.2 \
-    --term-zero-steps 20000 \
-    --no-class-consist \
-    --no-debug
-```
-
-### Download from the Checkpoints
+### Downloading the Checkpoints
 
 We provide pretrained checkpoints for models trained with class-consistent minibatching:
 
-| Model | Checkpoint |
-|-------|------------|
-| ESC-XL/2 | [Hugging Face](https://huggingface.co/Delcher/ESC-XL2/tree/main) |
-| ESC-B/2 | [Hugging Face](https://huggingface.co/Delcher/ESC-B2) |
+| Models|Iterations (Epochs)| Checkpoint Links | FID-50k |
+|-------|------|------| --|
+| ESC-XL/2 |1.2M (240) |[Hugging Face/ESC-XL2](https://huggingface.co/Delcher/ESC-XL2/tree/main) | 2.85|
+| ESC-XL/2 | 2.4M(480) |[Hugging Face/ESC-XL2](https://huggingface.co/Delcher/ESC-XL2/tree/main) | 2.53|
+| ESC-B/2 |600k(240) |[Hugging Face/ESC-B2](https://huggingface.co/Delcher/ESC-B2) | 5.78|
 
 ### Training the Baselines
 See [./scripts/run_baseline.sh](./scripts/run_baseline.sh)
