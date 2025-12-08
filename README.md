@@ -13,7 +13,7 @@
    <a href="https://guolinke.github.io" target="_blank">Guolin&nbsp;Ke</a><sup>3</sup>&ensp; <b>&middot;</b> &ensp;
   <a href="https://tailin.org" target="_blank">Tailin&nbsp;Wu</a><sup>1</sup>&ensp; <b>&middot;</b> &ensp;
   <a href="https://en.westlake.edu.cn/faculty/stan-zq-li.html" target="_blank">Stan Z.&nbsp;Li</a><sup>1</sup><br>
-  <sup>1</sup> Westlake University &emsp; <sup>2</sup> Chinese Academy of Sciences &emsp; <sup>3</sup>DP Technology &emsp
+  <sup>1</sup> Westlake University &emsp; <sup>2</sup> Chinese Academy of Sciences &emsp; <sup>3</sup>DP Technology &emsp;
 </div>
 
 ---
