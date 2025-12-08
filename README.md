@@ -1,6 +1,11 @@
 ## Elucidating Explicit&Easy Shortcut Model
 *Official code base of "On the Design of One-step Diffusion via Shortcutting Flow Paths" **(ESC: ExplicitShortCut)***
 
+<p align="center">
+  <img src="./demon/shortcut_demon.jpg" alt="ESC Overview" width="80%">
+</p>
+
+---
 <div align="center">
   <a href="https://https://edapinenut.github.io/" target="_blank">Haitao&nbsp;Lin</a><sup>1</sup> &ensp; <b>&middot;</b> &ensp;
   <a href="https://peiyannn.github.io" target="_blank">Peiyan&nbsp;Hu</a><sup>1,2</sup> &ensp; <b>&middot;</b> &ensp;
@@ -24,11 +29,7 @@ With our proposed improvements, the resulting one-step model achieves a new stat
 [![Model](https://img.shields.io/badge/🤗%20Model-ESC--B/2-blue)](https://huggingface.co/Delcher/ESC-B2)
 ---
 
-<p align="center">
-  <img src="./demon/shortcut_demon.jpg" alt="ESC Overview" width="80%">
-</p>
 
----
 
 ### Data Preparation
 This implementation utilizes LMDB datasets with VAE-encoded latent representations for efficient training. The preprocessing pipeline is reimplementation from the [MAR](https://github.com/LTH14/mar/blob/main/main_cache.py). 
