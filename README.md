@@ -1,7 +1,15 @@
 ## Elucidating Explicit&Easy Shortcut Model
-Code base of "On the Design of One-step Diffusion via Shortcutting Flow Paths"
+Official code base of "On the Design of One-step Diffusion via Shortcutting Flow Paths" **(ESC: ExplicitShortCut)**
 
-### DATA PREPARATION
+[![Paper](https://img.shields.io/badge/Paper-arXiv-red)](./demon/elucidating_shortcut__arxiv_.pdf)
+[![Model](https://img.shields.io/badge/🤗%20Model-ESC--XL/2-blue)](https://huggingface.co/Delcher/ESC-XL2/tree/main)
+[![Model](https://img.shields.io/badge/🤗%20Model-ESC--B/2-blue)](https://huggingface.co/Delcher/ESC-B2)
+
+<p align="center">
+  <img src="./demon/shortcut_demon.jpg" alt="ESC Overview" width="80%">
+</p>
+
+### Data Preparation
 This implementation utilizes LMDB datasets with VAE-encoded latent representations for efficient training. The preprocessing pipeline is reimplementation from the [MAR](https://github.com/LTH14/mar/blob/main/main_cache.py). 
 Once the ImageNet is downloaded in "YOUR/IMAGNET/PATH", 
 run the following for create the LMDB datasets:
@@ -12,7 +20,7 @@ torchrun preprocess_scripts/main_cache_imagenet.py \
 ```
 
 
-### TRAINING FROM SCRATCH
+### Training from Scratch
 Training ESC from scratch with SiT-B/2 with class-consistent mini-batching, run the following
 ```bash
 accelerate launch --multi_gpu \
@@ -145,9 +153,21 @@ accelerate launch --multi_gpu \
     --no-debug
 ```
 
+### Download from the Checkpoints
 
-### EVALUATION
-For large-scale sampling and quantitative evaluation (FID, IS), we provide a distributed evaluation framework:
+We provide pretrained checkpoints for models trained with class-consistent minibatching:
+
+| Model | Checkpoint |
+|-------|------------|
+| ESC-XL/2 | [Hugging Face](https://huggingface.co/Delcher/ESC-XL2/tree/main) |
+| ESC-B/2 | [Hugging Face](https://huggingface.co/Delcher/ESC-B2) |
+
+### Training the Baselines
+See [./scripts/run_baseline.sh](./scripts/run_baseline.sh)
+
+
+### Evaluation
+For the trained checkpoints, or the downloaded ones (.pt file), we provide a distributed evaluation scripts for large-scale sampling and quantitative evaluation (FID, IS):
 
 ```bash
 torchrun --nproc_per_node=8 --nnodes=1 evaluate.py \
@@ -178,4 +198,17 @@ torchrun --nnodes=1 evaluate.py \
     --num-steps 1 \
     --fid-statistics-file "./fid_stats/adm_float32_in256_stats.npz" \
     --adapt-model
+```
+
+### Acknowledgements
+
+This codebase is built upon [REPA](https://github.com/sihyun-yu/REPA). We thank the authors for their excellent work and open-source contribution.
+
+We also thank  the original MeanFlow implementation: [Gsunshine/MeanFlow](https://github.com/Gsunshine/meanflow), [Gsunshine/py-meanflow](https://github.com/Gsunshine/py-meanflow), and [zhuyu-cs/MeanFlow](https://github.com/zhuyu-cs/MeanFlow) for their PyTorch reimplementation, which helped with early code restructuring.
+
+For [IMM](https://github.com/lumalabs/imm), [sCT](https://github.com/xandergos/sCM-mnist), and [CM](https://github.com/openai/consistency_models), we thanks their (re-)implementation for our further remodularizing.
+
+**If you find our work is helpful to your research, please cite the following:**
+```
+TBD
 ```

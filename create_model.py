@@ -96,4 +96,7 @@ def create_model(args):
             group_size=args.group_size,
             gamma=args.gamma,
         )
+    else:
+        raise ValueError(f"Unknown model name: {args.model_name}")
+
     return loss_fn

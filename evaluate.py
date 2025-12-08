@@ -189,9 +189,9 @@ if __name__ == "__main__":
     # seed
     parser.add_argument("--global-seed", type=int, default=0)
     # logging/saving:
-    parser.add_argument("--ckpt", type=str, default="/vepfs/fs_projects/linhaitao/ExplicitShortCut/exp/imm-b2-cnd/checkpoints/0600000.pt", 
+    parser.add_argument("--ckpt", type=str, default="./exp/shortcut-b2-cfg/checkpoints/0080000.pt", 
                         help="Path to a checkpoint.")
-    parser.add_argument("--sample-dir", type=str, default="./samples/imm-b2-cnd/")
+    parser.add_argument("--sample-dir", type=str, default="./samples/shortcut-b2-cfg/")
     parser.add_argument("--keep-img", default=False, action=argparse.BooleanOptionalAction)
 
     # model
