@@ -42,7 +42,7 @@ torchrun preprocess_scripts/main_cache_imagenet.py \
 
 
 ### Training from Scratch
-See [scripts](./scripts/README.md) for detailed training commands.
+See [./scripts](./scripts/README.md) for detailed training commands.
 
 ### Downloading the Checkpoints
 
