@@ -51,8 +51,8 @@ We provide pretrained checkpoints for models trained with class-consistent minib
 | Models|Iterations (Epochs)| Checkpoint Links | FID-50k |
 |-------|------|------| --|
 | ESC-XL/2 |1.2M (240) |[Hugging Face/ESC-XL2](https://huggingface.co/Delcher/ESC-XL2/tree/main) | 2.85|
-| ESC-XL/2 | 2.4M(480) |[Hugging Face/ESC-XL2](https://huggingface.co/Delcher/ESC-XL2/tree/main) | 2.53|
-| ESC-B/2 |600k(240) |[Hugging Face/ESC-B2](https://huggingface.co/Delcher/ESC-B2) | 5.78|
+| ESC-XL/2 | 2.4M (480) |[Hugging Face/ESC-XL2](https://huggingface.co/Delcher/ESC-XL2/tree/main) | 2.53|
+| ESC-B/2 |600k (240) |[Hugging Face/ESC-B2](https://huggingface.co/Delcher/ESC-B2) | 5.78|
 
 ### Training the Baselines
 See [./scripts/run_baseline.sh](./scripts/run_baseline.sh)
@@ -102,5 +102,13 @@ For [IMM](https://github.com/lumalabs/imm), [sCT](https://github.com/xandergos/s
 
 **If you find our work is helpful to your research, please cite the following:**
 ```
-TBD
+@misc{lin2025designonestepdiffusionshortcutting,
+      title={On the Design of One-step Diffusion via Shortcutting Flow Paths}, 
+      author={Haitao Lin and Peiyan Hu and Minsi Ren and Zhifeng Gao and Zhi-Ming Ma and Guolin ke and Tailin Wu and Stan Z. Li},
+      year={2025},
+      eprint={2512.11831},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2512.11831}, 
+}
 ```
