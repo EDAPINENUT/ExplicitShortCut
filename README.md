@@ -23,7 +23,7 @@
 
 <b>Summary</b>: We propose Explicit ShortCut (ESC), a framework provides
 theoretical justification for validity of shortcut models and disentangles concrete component-level choices, thereby enabling systematic identification of improvements.
-With our proposed improvements, the resulting one-step model achieves a new state-of-the-art FID50k of 2.85 on ImageNet-256×256 under the classifier-free guidance setting without pre-training, distillation, or curriculum learning.
+With our proposed improvements, the resulting one-step model achieves a new state-of-the-art FID50k of 2.85 on ImageNet-256×256, and further reaches FID50k of 2.52 with 2× training steps, under the classifier-free guidance setting without pre-training, distillation, or curriculum learning.
 
 
 ---
