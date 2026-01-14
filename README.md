@@ -21,8 +21,7 @@
   <img src="./demon/shortcut_demon.jpg" alt="ESC Overview" width="80%">
 </p>
 
-<b>Summary</b>: We propose Explicit ShortCut (ESC), a framework that provides
-theoretical justification for validity of shortcut models and disentangles concrete component-level choices, thereby enabling systematic identification of improvements.
+<b>Summary</b>: We propose Explicit ShortCut (ESC), a framework that provides theoretical justification for the validity of shortcut models and disentangles concrete component-level choices, thereby enabling systematic identification of improvements.
 With our proposed improvements, the resulting one-step model achieves a new state-of-the-art FID50k of 2.85 on ImageNet-256×256, and further reaches FID50k of 2.52 with 2× training steps, under the classifier-free guidance setting without pre-training, distillation, or curriculum learning.
 
 
@@ -31,9 +30,9 @@ With our proposed improvements, the resulting one-step model achieves a new stat
 
 
 ### Data Preparation
-This implementation utilizes LMDB datasets with VAE-encoded latent representations for efficient training. The preprocessing pipeline is reimplementation from the [MAR](https://github.com/LTH14/mar/blob/main/main_cache.py). 
+This implementation utilizes LMDB datasets with VAE-encoded latent representations for efficient training. The preprocessing pipeline is a reimplementation of the [MAR](https://github.com/LTH14/mar/blob/main/main_cache.py). 
 Once the ImageNet is downloaded in "YOUR/IMAGNET/PATH", 
-run the following for create the LMDB datasets:
+Run the following to create the LMDB datasets:
 ```bash
 torchrun preprocess_scripts/main_cache_imagenet.py \
 --folder_dir "YOUR/IMAGNET/PATH/train"
@@ -59,7 +58,7 @@ See [./scripts/run_baseline.sh](./scripts/run_baseline.sh)
 
 
 ### Evaluation
-For the trained checkpoints, or the downloaded ones (.pt file), we provide a distributed evaluation scripts for large-scale sampling and quantitative evaluation (FID, IS):
+For the trained checkpoints, or the downloaded ones (.pt file), we provide a distributed evaluation script for large-scale sampling and quantitative evaluation (FID, IS):
 
 ```bash
 torchrun --nproc_per_node=8 --nnodes=1 evaluate.py \
@@ -104,7 +103,7 @@ For [IMM](https://github.com/lumalabs/imm), [sCT](https://github.com/xandergos/s
 ```
 @misc{lin2025designonestepdiffusionshortcutting,
       title={On the Design of One-step Diffusion via Shortcutting Flow Paths}, 
-      author={Haitao Lin and Peiyan Hu and Minsi Ren and Zhifeng Gao and Zhi-Ming Ma and Guolin ke and Tailin Wu and Stan Z. Li},
+      author={Haitao Lin and Peiyan Hu and Minsi Ren and Zhifeng Gao and Zhi-Ming Ma and Guolin Ke and Tailin Wu and Stan Z. Li},
       year={2025},
       eprint={2512.11831},
       archivePrefix={arXiv},
