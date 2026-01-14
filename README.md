@@ -1,6 +1,6 @@
 ## On the Design of One-step Diffusion via Shortcutting Flow Paths  *(ESC: ExplicitShortCut)*
 
-[![Paper](https://img.shields.io/badge/Paper-arXiv-red)](./demon/elucidating_shortcut__arxiv.pdf)
+[![Paper](https://img.shields.io/badge/Paper-arXiv-red)](https://arxiv.org/abs/2512.11831)
 [![Model](https://img.shields.io/badge/🤗%20Model-ESC--XL/2-blue)](https://huggingface.co/Delcher/ESC-XL2/tree/main)
 [![Model](https://img.shields.io/badge/🤗%20Model-ESC--B/2-blue)](https://huggingface.co/Delcher/ESC-B2)
 <div align="center">
@@ -21,7 +21,7 @@
   <img src="./demon/shortcut_demon.jpg" alt="ESC Overview" width="80%">
 </p>
 
-<b>Summary</b>: We propose Explicit ShortCut (ESC), a framework provides
+<b>Summary</b>: We propose Explicit ShortCut (ESC), a framework that provides
 theoretical justification for validity of shortcut models and disentangles concrete component-level choices, thereby enabling systematic identification of improvements.
 With our proposed improvements, the resulting one-step model achieves a new state-of-the-art FID50k of 2.85 on ImageNet-256×256, and further reaches FID50k of 2.52 with 2× training steps, under the classifier-free guidance setting without pre-training, distillation, or curriculum learning.
 
