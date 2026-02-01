@@ -200,8 +200,8 @@ class ConsistencyLoss:
         # Apply adaptive loss based on configuration
         if self.loss_type == "adaptive":
             loss_mid = torch.sum((error**2).reshape(error.shape[0],-1), dim=-1)
-            weights = 1.0 / (loss_mid.detach() ** 2 + 1e-3).pow(self.adaptive_p)
-            loss = weights * loss_mid ** 2          
+            weights = 1.0 / (loss_mid.detach() + 1e-3).pow(self.adaptive_p)
+            loss = weights * loss_mid          
         elif self.loss_type == "l2":
             loss = torch.mean((error**2).reshape(error.shape[0],-1), dim=-1)
         else:
