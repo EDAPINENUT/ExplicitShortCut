@@ -1,6 +1,6 @@
 ## On the Design of One-step Diffusion via Shortcutting Flow Paths  *(ESC: ExplicitShortCut)*
 
-[![Project Page](https://img.shields.io/badge/🌐%20Project-Page-brightgreen)](https://edapinenut.github.io/explicitshortcut-project-page/)
+[![Project Page](https://img.shields.io/badge/🌐%20ProjectPage-ESC-brightgreen)](https://edapinenut.github.io/explicitshortcut-project-page/)
 [![arXiv](https://img.shields.io/badge/arXiv-2512.11831-b31b1b.svg)](https://arxiv.org/abs/2512.11831)
 [![Model](https://img.shields.io/badge/🤗%20Model-ESC--XL/2-blue)](https://huggingface.co/Delcher/ESC-XL2/tree/main)
 [![Model](https://img.shields.io/badge/🤗%20Model-ESC--B/2-blue)](https://huggingface.co/Delcher/ESC-B2)
