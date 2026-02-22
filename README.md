@@ -105,13 +105,11 @@ For [IMM](https://github.com/lumalabs/imm), [sCT](https://github.com/xandergos/s
 
 **If you find our work is helpful to your research, please cite the following:**
 ```
-@misc{lin2025designonestepdiffusionshortcutting,
+@inproceedings{lin2025designonestepdiffusionshortcutting,
       title={On the Design of One-step Diffusion via Shortcutting Flow Paths}, 
       author={Haitao Lin and Peiyan Hu and Minsi Ren and Zhifeng Gao and Zhi-Ming Ma and Guolin Ke and Tailin Wu and Stan Z. Li},
-      year={2025},
-      eprint={2512.11831},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2512.11831}, 
+      booktitle={The Fourteenth International Conference on Learning Representations},
+      year={2026},
+      url={https://openreview.net/forum?id=k6q8rRYVQR}
 }
 ```
